@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/png" href="Game Logo.png">
+<title>Game Dashboard</title>
+
+<style>
+    * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Poppins", sans-serif;
+  }
+
+  body {
+    background: #0b0f19;
+    color: #fff;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ========================= */
+  /* TOGGLE BUTTON (ALWAYS ON) */
+  /* ========================= */
+  .toggle-btn {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    background: #00eaff;
+    color: #0b0f19;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.2rem;
+    padding: 10px 14px;
+    cursor: pointer;
+    z-index: 200;
+    transition: 0.3s ease;
+  }
+
+  .toggle-btn:hover {
+    background: #00bcd4;
+  }
+
+  /* ========================= */
+  /* DROPDOWN MENU (HIDDEN)    */
+  /* ========================= */
+  .sidebar {
+    position: fixed;
+    top: 75px;
+    left: 20px;
+    width: 260px;
+    background: linear-gradient(180deg, #12182b, #101524);
+    padding: 20px 15px;
+    border-radius: 16px;
+    box-shadow: 0 0 25px rgba(0, 234, 255, 0.25);
+    opacity: 0;
+    transform: translateY(-15px);
+    pointer-events: none;
+    transition: 0.35s ease;
+    z-index: 150;
+  }
+
+  .sidebar.open {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  .sidebar h2 {
+    font-size: 1.1rem;
+    margin-bottom: 20px;
+    white-space: nowrap;
+  }
+
+  .sidebar button {
+    display: block;
+    width: 100%;
+    background: none;
+    border: none;
+    color: #ddd;
+    text-align: left;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: 0.3s;
+  }
+
+  .sidebar button:hover {
+    background: #1b2338;
+    color: #00eaff;
+  }
+
+  /* ========================= */
+  /* MAIN DASHBOARD            */
+  /* ========================= */
+  .main {
+    padding: 40px;
+    margin-top: 80px;
+  }
+
+  .balance-section, .join-section {
+    background: #12182b;
+    padding: 20px;
+    border-radius: 18px;
+    margin-bottom: 20px;
+  }
+
+  .join-section form {
+    max-width: 360px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .join-section input {
+    padding: 12px;
+    border-radius: 8px;
+    border: none;
+  }
+
+  .join-section button {
+    padding: 12px;
+    border-radius: 8px;
+    border: none;
+    background: #00eaff;
+    cursor: pointer;
+  }
+</style>
+</head>
+
+<body>
+
+<div class="sidebar" id="sidebar">
+  <h2 id="profileName">👤 Loading...</h2>
+
+  <button onclick="location.href='profil'">ℹ️ Information</button>
+  <button onclick="location.href='dashboard'">📊 Dashboard</button>
+  <button onclick="location.href='deposit'">💰 Deposit</button>
+  <button onclick="location.href='withdrawal'">💸 Withdrawal</button>
+  <button onclick="location.href='history.html'">📜 Transactions</button>
+  <button onclick="location.href='scores'">🏆 Game Scores</button>
+  <button onclick="location.href='game-history'">🕹️ Game history</button>
+  <button id="logoutBtn">🚪 Logout</button>
+</div>
+
+<button class="toggle-btn" id="toggleBtn">☰</button>
+
+<div class="main">
+  <h1>♟️ Join Chess Game</h1>
+
+  <div class="balance-section">
+    <strong>Balance:</strong> KES <span id="userBalance">0</span>
+  </div>
+
+  <div class="join-section">
+    <form id="joinForm">
+      <input type="text" id="inviteCode" placeholder="Enter game code" required>
+      <button type="submit" id="joinAcceptBtn">Join Game</button>
+    </form>
+  </div>
+</div>
+<script type="module" src="https://playnexia.xyz/js-read/verify.js"></script>
+<script type="module" src="https://playnexia.xyz/js-read/3379b1d03130414b233711b51c90ca17trackcode2.js"></script>
+<!-- MENU LOGIC -->
+  <script>
+    const sidebar = document.getElementById("sidebar");
+    const toggleBtn = document.getElementById("toggleBtn");
+
+    toggleBtn.addEventListener("click", () => {
+      sidebar.classList.toggle("open");
+    });
+
+    document.addEventListener("click", (e) => {
+      if (!sidebar.contains(e.target) && !toggleBtn.contains(e.target)) {
+        sidebar.classList.remove("open");
+      }
+    });
+  </script>
+</body>
+</html>

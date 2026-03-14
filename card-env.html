@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/png" href="Game Logo.png">
+<title>Game Dashboard</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Poppins", sans-serif; }
+  body { background: #0b0f19; color: #fff; display: flex; min-height: 100vh; overflow-x: hidden; }
+
+  /* SIDEBAR */
+  .sidebar { 
+    position: fixed; top: 0; left: 0; 
+    width: 230px; height: 100vh; 
+    background: linear-gradient(180deg, #12182b, #101524); 
+    padding: 25px 15px; 
+    transition: 0.4s; 
+    overflow-y: auto;
+  }
+  .sidebar.hidden { width: 70px; }
+
+  .sidebar h2 { font-size: 1.1rem; margin-bottom: 30px; transition: 0.3s; white-space: nowrap; }
+  .sidebar.hidden h2 { opacity: 0; }
+
+  .sidebar button { 
+    width: 100%; 
+    background: none; 
+    border: none; 
+    color: #ddd; 
+    padding: 12px; 
+    border-radius: 8px; 
+    cursor: pointer; 
+    text-align: left; 
+    transition: 0.3s; 
+    white-space: nowrap;
+    overflow: hidden;
+  }
+  .sidebar button:hover { background: #1b2338; color: #00eaff; }
+
+  /* TOGGLE BUTTON */
+  .toggle-btn { 
+    position: fixed; 
+    top: 20px; 
+    left: 250px; 
+    background: #00eaff; 
+    color: #0b0f19; 
+    padding: 8px 14px; 
+    border-radius: 6px; 
+    cursor: pointer; 
+    transition: 0.4s;
+    z-index: 1000;
+  }
+  .sidebar.hidden ~ .toggle-btn { left: 90px; }
+
+  /* MAIN CONTENT */
+  .main { 
+    margin-left: 230px; 
+    padding: 40px; 
+    transition: 0.4s; 
+    width: 100%;
+  }
+  .sidebar.hidden ~ .main { margin-left: 80px; }
+
+  .main h1 { color: #00eaff; margin-bottom: 20px; }
+
+  /* SECTIONS */
+  .user-info, .balance-section, .play-section { 
+    background: #12182b; 
+    padding: 20px; 
+    border-radius: 18px; 
+    box-shadow: 0 0 15px rgba(0, 234, 255, 0.1); 
+    margin-bottom: 20px; 
+  }
+
+  .play-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .play-buttons {
+    display: flex;
+    gap: 12px;
+    margin-top: 6px;
+  }
+
+  .play-buttons button {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 6px;
+    background: #00eaff;
+    color: #0b0f19;
+    cursor: pointer;
+  }
+  .play-buttons button:hover { background: #00bcd4; }
+
+  /* NEW RED BUTTON */
+  #joinCodeBtn {
+    background: #ff3b3b;
+    color: #fff;
+  }
+  #joinCodeBtn:hover {
+    background: #d82727;
+  }
+
+  /* Modal */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+  }
+  .modal {
+    width: 340px;
+    background: #0f1724;
+    padding: 18px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+    color: #fff;
+  }
+  .modal h3 { margin-bottom: 12px; color:#00eaff; }
+  .modal input[type="number"],
+  .modal input[type="text"] {
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: none;
+    margin-bottom: 12px;
+  }
+  .modal .row {
+    display: flex;
+    gap: 8px;
+  }
+  .modal .btn {
+    flex: 1;
+    padding: 10px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+  }
+  .modal .btn.primary { background: #00eaff; color: #0b0f19; }
+  .modal .btn.ghost { background: transparent; color: #ddd; border: 1px solid #2b3446; }
+
+  @media (max-width: 720px) {
+    .main { padding: 20px; margin-left: 80px; }
+    .toggle-btn { left: 90px; }
+  }
+</style>
+</head>
+
+<body>
+  <div class="sidebar" id="sidebar">
+    <h2 id="profileName">👤 Loading...</h2>
+
+    <button onclick="location.href='profil'">ℹ️ Information</button>
+    <button onclick="location.href='dashboard'">📊 Dashboard</button>
+    <button onclick="location.href='deposit'">💰 Deposit</button>
+    <button onclick="location.href='withdrawal'">💸 Withdrawal</button>
+    <button onclick="location.href='history.html'">📜 Transactions</button>
+    <button onclick="location.href='scores'">🏆 Game Scores</button>
+    <button onclick="location.href='game-history'">🕹️ Game history</button>
+
+    <button id="logoutBtn">🚪 Logout</button>
+  </div>
+
+  <button class="toggle-btn" id="toggleBtn">☰</button>
+
+  <div class="main" id="main">
+    <h1>🃏 Poker</h1>
+
+    <div class="balance-section">
+      <p><strong>Current Balance:</strong> KES <span id="userBalance">0</span></p>
+    </div>
+
+    <div class="play-section">
+      <div class="play-controls">
+
+        <!-- ❌ REMOVED ORIGINAL INPUT FIELD  
+             ✔ REPLACED WITH RED BUTTON -->
+        <div class="play-buttons">
+          <button id="friendlyPlayBtn">🫂 Friendly Play</button>
+          <button onclick="location.href='crcode'">🔴 Joining Code</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- FRIENDLY PLAY MODAL -->
+  <div class="modal-backdrop" id="friendlyModal">
+    <div class="modal">
+      <h3>Friendly Play — Minimum KES 10</h3>
+      <input type="number" id="friendlyAmount" placeholder="Enter amount (min 10)" min="10">
+      <div class="row">
+        <button class="btn primary" id="friendlySubmit">Create Friendly Game</button>
+        <button class="btn ghost" id="friendlyCancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+ <script>
+  const toggleBtn = document.getElementById("toggleBtn");
+  const sidebar = document.getElementById("sidebar");
+
+  if (toggleBtn && sidebar) {
+    toggleBtn.addEventListener("click", () => {
+      sidebar.classList.toggle("hidden");
+    });
+  }
+ </script>
+
+  <script type="module" src="https://playnexia.xyz/js-read/verify.js"></script>
+  <script type="module" src="https://playnexia.xyz/js-read/card.js"></script>
+ 
+
+</body>
+</html>

@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>AIludo — 3D Visual Board</title>
+  <style>
+    :root{
+      --bg:#0f1724;
+      --card:#0b1220;
+      --accent:#ffd166;
+      --board-width:680px;
+      --board-depth:40px;
+      --perspective:1100px;
+    }
+    html,body{
+      height:100%;
+      margin:0;
+      background:
+        linear-gradient(180deg, #071026 0%, #0b1220 100%);
+      font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      color:#e6eef8;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .wrap {
+      width: calc(var(--board-width) + 40px);
+      max-width:95vw;
+      display:flex;
+      gap:18px;
+      align-items:flex-start;
+    }
+
+    /* scene */
+    .scene {
+      width: var(--board-width);
+      perspective: var(--perspective);
+      perspective-origin: 50% 40%;
+      user-select: none;
+    }
+
+    .camera {
+      width:100%;
+      transform-style:preserve-3d;
+      transition: transform 300ms ease;
+      transform: translateZ(-220px) rotateX(22deg) rotateY(-14deg);
+    }
+
+    /* board group — a 3d box with textured top */
+    .board {
+      width:100%;
+      height: calc(var(--board-width));
+      position:relative;
+      transform-style:preserve-3d;
+      margin:auto;
+      display:block;
+    }
+
+    /* top face uses the provided base64 texture */
+    .board__top {
+      position:absolute;
+      width:100%;
+      height:100%;
+      left:0; top:0;
+      border-radius:18px;
+      overflow:hidden;
+      transform: translateZ(calc(var(--board-depth) / 2));
+      box-shadow: 0 30px 60px rgba(2,6,23,0.6), inset 0 -8px 20px rgba(0,0,0,0.35);
+      background-image: url("data:image/png;base64,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");
+      background-size: cover;
+      background-position: center;
+    }
+
+    /* board edges (thickness) */
+    .board__edge {
+      position:absolute;
+      left:0; top:0;
+      width:100%;
+      height:var(--board-depth);
+      transform-origin: center;
+      transform: translateY(calc(100% - var(--board-depth)/2)) rotateX(90deg) translateZ(calc(var(--board-depth) / 2 * -1));
+      border-radius:0 0 16px 16px;
+      background: linear-gradient(180deg,#0b1220,#071026);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.6);
+      opacity:0.95;
+    }
+
+    /* tokens (look like short cylinders) */
+    .token {
+      position:absolute;
+      width:40px;
+      height:40px;
+      left:50%;
+      top:50%;
+      transform-style:preserve-3d;
+      transform-origin:center;
+      margin:-20px;
+      transition: transform 300ms cubic-bezier(.2,.9,.2,1), box-shadow 250ms;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:grab;
+      z-index:5;
+    }
+
+    .token .cap {
+      width:100%;
+      height:22px;
+      border-radius:50% 50% 40% 40%;
+      transform: translateZ(10px);
+      box-shadow: 0 8px 14px rgba(2,6,23,0.55);
+    }
+
+    .token .base {
+      width:80%;
+      height:18px;
+      border-radius:50%;
+      transform: translateZ(0px) translateY(6px);
+      opacity:0.95;
+    }
+
+    /* sample positions for tokens (arranged around board for demo) */
+    .token.p1 { left:12%; top:12%; }
+    .token.p1.t2 { left:22%; top:12%; }
+    .token.p1.t3 { left:12%; top:22%; }
+    .token.p1.t4 { left:22%; top:22%; }
+
+    .token.p2 { left:78%; top:78%; }
+    .token.p2.t2 { left:68%; top:78%; }
+    .token.p2.t3 { left:78%; top:68%; }
+    .token.p2.t4 { left:68%; top:68%; }
+
+    /* colors */
+    .token.p1 .cap { background: linear-gradient(180deg,#ff7b7b,#b23232); }
+    .token.p1 .base { background: linear-gradient(180deg,#b23232,#7f1d1d); }
+
+    .token.p2 .cap { background: linear-gradient(180deg,#7be4a6,#1a8f4f); }
+    .token.p2 .base { background: linear-gradient(180deg,#1a8f4f,#0f5b2f); }
+
+    /* simple hover pop */
+    .token:active { cursor:grabbing; transform: translateZ(40px) scale(1.06); box-shadow:0 30px 80px rgba(0,0,0,0.6); }
+
+    /* dice cube */
+    .dice-wrap {
+      width:200px;
+      perspective:800px;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      align-items:center;
+    }
+    .dice {
+      position:relative;
+      width:110px;
+      height:110px;
+      transform-style:preserve-3d;
+      transition: transform 900ms cubic-bezier(.2,.8,.2,1);
+      cursor:pointer;
+    }
+    .dice .face {
+      position:absolute;
+      width:100%;
+      height:100%;
+      left:0; top:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:#fff;
+      color:#111;
+      border-radius:12px;
+      box-shadow: 0 10px 20px rgba(2,6,23,0.35), inset 0 -6px 12px rgba(0,0,0,0.06);
+    }
+    .dice .dot {
+      width:14px;
+      height:14px;
+      border-radius:50%;
+      background:#111;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.6);
+    }
+    /* faces transform */
+    .face.f1 { transform: rotateY(0deg) translateZ(55px); }
+    .face.f2 { transform: rotateY(90deg) translateZ(55px); }
+    .face.f3 { transform: rotateY(180deg) translateZ(55px); }
+    .face.f4 { transform: rotateY(-90deg) translateZ(55px); }
+    .face.f5 { transform: rotateX(90deg) translateZ(55px); }
+    .face.f6 { transform: rotateX(-90deg) translateZ(55px); }
+
+    /* dots layout for faces */
+    .dots {
+      width:72px; height:72px;
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      gap:10px;
+      align-items:center;
+      justify-items:center;
+    }
+    .dots .dot { width:14px; height:14px; }
+
+    /* small UI */
+    .controls {
+      width:200px;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      align-items:center;
+      padding-top:10px;
+    }
+    .btn {
+      padding:10px 14px;
+      border-radius:10px;
+      background:linear-gradient(180deg,#0f1724,#172033);
+      border:1px solid rgba(255,255,255,0.04);
+      color:#e6eef8;
+      cursor:pointer;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+      font-size:14px;
+    }
+    .hint {
+      font-size:13px; color:#9fb4d6; text-align:center; opacity:0.9;
+    }
+
+    /* responsive */
+    @media (max-width:900px){
+      .wrap { flex-direction:column; align-items:center; }
+      .dice-wrap { order:2; }
+      .scene { order:1; margin-bottom:18px; }
+    }
+
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="scene" id="scene">
+      <div class="camera" id="camera">
+        <div class="board" id="board">
+          <div class="board__top" aria-hidden="true"></div>
+          <div class="board__edge" aria-hidden="true"></div>
+
+          <!-- tokens sample (4 token positions per player) -->
+          <div class="token p1 t1" data-player="p1" data-index="0">
+            <div class="cap"></div><div class="base"></div>
+          </div>
+          <div class="token p1 t2" data-player="p1" data-index="1">
+            <div class="cap"></div><div class="base"></div>
+          </div>
+          <div class="token p1 t3" data-player="p1" data-index="2">
+            <div class="cap"></div><div class="base"></div>
+          </div>
+          <div class="token p1 t4" data-player="p1" data-index="3">
+            <div class="cap"></div><div class="base"></div>
+          </div>
+
+          <div class="token p2 t1" data-player="p2" data-index="0">
+            <div class="cap"></div><div class="base"></div>
+          </div>
+          <div class="token p2 t2" data-player="p2" data-index="1">
+            <div class="cap"></div><div class="base"></div>
+          </div>
+          <div class="token p2 t3" data-player="p2" data-index="2">
+            <div class="cap"></div><div class="base"></div>
+          </div>
+          <div class="token p2 t4" data-player="p2" data-index="3">
+            <div class="cap"></div><div class="base"></div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="dice-wrap" aria-hidden="false">
+      <div class="dice" id="dice" title="Click to roll">
+        <div class="face f1"><div class="dots dots-1"></div></div>
+        <div class="face f2"><div class="dots dots-2"></div></div>
+        <div class="face f3"><div class="dots dots-3"></div></div>
+        <div class="face f4"><div class="dots dots-4"></div></div>
+        <div class="face f5"><div class="dots dots-5"></div></div>
+        <div class="face f6"><div class="dots dots-6"></div></div>
+      </div>
+
+      <button class="btn" id="rollBtn">Roll Dice (visual)</button>
+      <div class="hint">Drag the board to rotate • Wheel to zoom</div>
+      <button class="btn" id="resetView">Reset View</button>
+    </div>
+  </div>
+
+  <!-- Firebase Verify -->
+<script type="module" src="https://playnexia.xyz/js-read/verify.js"></script>
+
+<!-- Main Game Script -->
+<script type="module" src="ludoAI.js"></script>
+
+  <!-- Visual scripting for interaction -->
+  <script>
+    // Scene interaction: drag to rotate, wheel to zoom
+    (function(){
+      const camera = document.getElementById('camera');
+      const scene = document.getElementById('scene');
+      let isDown=false, startX=0, startY=0, rotX=22, rotY=-14, zoom=-220;
+
+      scene.addEventListener('pointerdown', e=>{
+        isDown = true;
+        startX = e.clientX;
+        startY = e.clientY;
+        scene.setPointerCapture(e.pointerId);
+      });
+      window.addEventListener('pointerup', e=>{
+        isDown=false;
+      });
+      window.addEventListener('pointermove', e=>{
+        if(!isDown) return;
+        const dx = e.clientX - startX;
+        const dy = e.clientY - startY;
+        startX = e.clientX; startY = e.clientY;
+        rotX = Math.min(60, Math.max(0, rotX - dy*0.2));
+        rotY = (rotY + dx*0.25);
+        updateCamera();
+      });
+
+      function updateCamera(){
+        camera.style.transform = `translateZ(${zoom}px) rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+      }
+
+      // wheel to zoom
+      scene.addEventListener('wheel', e=>{
+        e.preventDefault();
+        zoom += e.deltaY * 0.6;
+        zoom = Math.min(-80, Math.max(-600, zoom));
+        updateCamera();
+      }, { passive:false });
+
+      document.getElementById('resetView').addEventListener('click', ()=>{
+        rotX = 22; rotY = -14; zoom = -220; updateCamera();
+      });
+
+      updateCamera();
+    })();
+
+    // Dice visual & roll animation
+    (function(){
+      const dice = document.getElementById('dice');
+      const rollBtn = document.getElementById('rollBtn');
+
+      // helper: make dot patterns for faces
+      function makeDots(faceIndex, container){
+        // clear
+        container.innerHTML = '';
+        const grid = document.createElement('div');
+        grid.className = 'dots';
+        for(let r=0;r<9;r++){
+          const dot = document.createElement('div');
+          dot.className = 'dot';
+          // mapping 3x3 cells -> show pips depending on faceIndex
+          const row = Math.floor(r/3), col = r%3;
+          const center = (row===1 && col===1);
+          const topLeft = (row===0 && col===0);
+          const topRight = (row===0 && col===2);
+          const bottomLeft = (row===2 && col===0);
+          const bottomRight = (row===2 && col===2);
+
+          let show = false;
+          if(faceIndex === 1) show = center;
+          if(faceIndex === 2) show = topLeft || bottomRight;
+          if(faceIndex === 3) show = center || topLeft || bottomRight;
+          if(faceIndex === 4) show = topLeft || topRight || bottomLeft || bottomRight;
+          if(faceIndex === 5) show = topLeft || topRight || bottomLeft || bottomRight || center;
+          if(faceIndex === 6) show = topLeft || topRight || bottomLeft || bottomRight || (row===1 && (col===0 || col===2));
+          dot.style.opacity = show ? '1' : '0';
+          grid.appendChild(dot);
+        }
+        container.appendChild(grid);
+      }
+
+      // setup faces
+      const faces = dice.querySelectorAll('.face .dots');
+      // ensure all faces have dots for numbers 1..6
+      for(let i=0;i<6;i++){
+        makeDots(i+1, dice.querySelectorAll('.face')[i].querySelector('.dots'));
+      }
+
+      // random face rotation presets to show each number on front
+      const faceRotations = {
+        1: 'rotateY(0deg)',
+        2: 'rotateY(-90deg)',
+        3: 'rotateY(-180deg)',
+        4: 'rotateY(90deg)',
+        5: 'rotateX(-90deg)',
+        6: 'rotateX(90deg)'
+      };
+
+      // rolling animation controller
+      function rollVisual(result){
+        // random spin then settle on face for 'result'
+        const spins = [
+          'rotateX(720deg) rotateY(360deg)',
+          'rotateX(540deg) rotateY(720deg)',
+          'rotateX(360deg) rotateY(540deg)',
+          'rotateX(720deg) rotateY(720deg)'
+        ];
+        const spin = spins[Math.floor(Math.random()*spins.length)];
+        dice.style.transition = 'transform 900ms cubic-bezier(.2,.8,.2,1)';
+        // start spin
+        dice.style.transform = spin;
+        // after spin, settle to the result face with small rotation offset
+        setTimeout(()=>{
+          const settle = faceRotations[result] + ' rotateZ(' + (Math.random()*30-15) + 'deg)';
+          dice.style.transform = settle;
+        }, 150);
+      }
+
+      function randomRoll(){
+        return Math.floor(Math.random()*6)+1;
+      }
+
+      rollBtn.addEventListener('click', ()=>{
+        const r = randomRoll();
+        rollVisual(r);
+      });
+
+      dice.addEventListener('click', ()=>{
+        const r = randomRoll();
+        rollVisual(r);
+      });
+
+    })();
+
+    // Make tokens draggable within scene for demo (not game logic)
+    (function(){
+      const tokens = document.querySelectorAll('.token');
+      tokens.forEach(t=>{
+        let down=false, ox=0, oy=0;
+        t.addEventListener('pointerdown', e=>{
+          down=true; t.setPointerCapture(e.pointerId);
+          ox = e.clientX; oy = e.clientY;
+          t.style.transition = 'none';
+          t.style.transform += ' translateZ(40px) scale(1.04)';
+        });
+        window.addEventListener('pointermove', e=>{
+          if(!down) return;
+          const dx = e.clientX - ox; const dy = e.clientY - oy;
+          // convert screen delta to relative percent positions
+          const p = t.getBoundingClientRect();
+          const parent = t.parentElement.getBoundingClientRect();
+          const newLeft = Math.min(Math.max(0, (p.left - parent.left + dx) / parent.width * 100), 100);
+          const newTop  = Math.min(Math.max(0, (p.top - parent.top + dy) / parent.height * 100), 100);
+          t.style.left = newLeft + '%';
+          t.style.top  = newTop + '%';
+          ox = e.clientX; oy = e.clientY;
+        });
+        window.addEventListener('pointerup', e=>{
+          if(!down) return;
+          down=false;
+          t.releasePointerCapture && t.releasePointerCapture();
+          t.style.transition = '';
+          t.style.transform = t.style.transform.replace(' translateZ(40px) scale(1.04)','');
+        });
+      });
+    })();
+
+  </script>
+</body>
+</html>
+
